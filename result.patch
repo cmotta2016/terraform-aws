@@ -1,0 +1,334 @@
+From 78f4ac8d6335759d3ac2a97e70f1ad3629b68bdd Mon Sep 17 00:00:00 2001
+From: Carlos Motta <motta.carlos08@gmail.com>
+Date: Fri, 1 Nov 2019 15:59:59 -0300
+Subject: [PATCH] My solution
+
+---
+ .env                       |  22 +++++++++
+ README.md                  | 116 ++++++++++++++++++---------------------------
+ docker-compose.yml         |  63 ++++++++++++++++++++++++
+ hello-node/.dockerignore   |   3 ++
+ hello-node/Dockerfile      |   7 +++
+ hello-node/app.js          |   4 +-
+ hello-python/.dockerignore |   3 ++
+ hello-python/Dockerfile    |   8 ++++
+ hello-python/app.py        |   2 +-
+ terraform-aws              |   1 +
+ 10 files changed, 156 insertions(+), 73 deletions(-)
+ create mode 100644 .env
+ create mode 100644 docker-compose.yml
+ create mode 100644 hello-node/.dockerignore
+ create mode 100644 hello-node/Dockerfile
+ create mode 100644 hello-python/.dockerignore
+ create mode 100644 hello-python/Dockerfile
+ create mode 160000 terraform-aws
+
+diff --git a/.env b/.env
+new file mode 100644
+index 0000000..ed32857
+--- /dev/null
++++ b/.env
+@@ -0,0 +1,22 @@
++## MYSQL Environments
++CONTAINER_NAME_MYSQL=hello-database
++DATA_VOLUME_MYSQL=database
++CREATE_DB=./create_database.sql
++MYSQL_ROOT_PASSWORD=123qwe.
++MYSQL_USER=dbuser
++MYSQL_PASSWORD=dbpassword
++MYSQL_DATABASE=hello
++
++## RabbitMQ Environments
++CONTAINER_NAME_RABBIT=hello-rabbit
++
++## Node Environments
++CONTAINER_NAME_NODE=hello-node
++RABBITMQ_PORT=5672
++RABBITMQ_QUEUE=hello
++
++## Python Environments
++CONTAINER_NAME_PYTHON=hello-python
++RABBITMQ_PORT=5672
++RABBITMQ_QUEUE=hello
++
+diff --git a/README.md b/README.md
+index e723eca..fabe5e3 100644
+--- a/README.md
++++ b/README.md
+@@ -1,71 +1,47 @@
+-# hello-devops
++## My Solution
++This solution use docker-compose orchestration to build Python and Nodejs application, and deploy four containers: hello-python, hello-node, rabbitmq and mysql.  
++
++The necessary infrastructure will be created on AWS using Terraform scripts. This will create a VPC, Subnet, IGW, Route, Security Group and one EC2 instance t2.medium.  
++
++### Provisioning AWS infrastructure with Terraform
++
++1. Install the following packages on your local Linux machine:
++```
++terraform
++make
++git
++```
++
++2. Create AWS IAM service account with **programatic access** and two policies (take note of Access key and Secret key):
++```
++AmazonEC2FullAccess
++AmazonVPCFullAccess
++```
++
++3. Export environment variables for your access key, secret key, and choose a region:
++```
++export AWS_ACCESS_KEY_ID="your_access_key"
++export AWS_SECRET_ACCESS_KEY="your_secret_key"
++export AWS_DEFAULT_REGION="choose_a_region" # for example us-east-1
++```
++
++4. Creating infrastructure:
++```
++cd terraform-aws
++make create_infrastructure
++```
++**Important:** This script will create a local private ssh key called **hello-key** locally. Use this key to connect to instance.  
++
++### Deploy stack
++1. Inside EC2 instance use docker-compose to deploy the entire stack:  
++```
++git clone https://github.com/quintoandar/hello-devops.git
++cd hello-devops
++sudo /usr/local/bin/docker-compose up --build -d
++```
++
++2. Two URLs will be available:  
++RabbitMQ Console: http://<instance_public_ip>:15672  
++Form: http://<instance_public_ip>:8000
++``` 
+ 
+-_Please read these instructions carefully._
+-
+-There are 2 applications in this project:
+-
+-* **hello-python** is a web page that contains a form; when the form is submitted, hello-python enqueues the message on a RabbitMQ queue.
+-
+-* **hello-node** is a worker that consumes the RabbitMQ queue and stores any message on a MySQL database.
+-
+-There's also a `create_database.sql` script, to help you prepare the MySQL database.
+-
+-Each application contains a short README file with more information.
+-
+-## Problem
+-
+-**Deploy this entire stack** in a way that _any message entered on the hello-python form is stored on a MySQL database by hello-node_.
+-
+-* **There are a few bugs in the code**, and you'll need to fix them to solve this exercise; you should not require any specific knowledge of either Python or NodeJS to solve these issues.
+-
+-* If you need to make any changes to help you debugging (such as adding logs or catching exceptions) we suggest you keep them so we can understand your thought proccess.
+-
+-* If you have some knowledge of Python or NodeJS development, feel free to implement or suggest _simple_ improvements to the applications to make them production-ready.
+-
+-## Solutions
+-
+-We'll accept _any_ of the following types of solution:
+-
+-* A script using a CLI, SDK, API or library that deploys the stack on a host running a modern Linux distribution _or_ on the AWS cloud.
+-
+-* A Docker Compose file _or_ another similar container orchestration solution that deploys the stack on a host running a modern Linux distribution _or_ on the AWS cloud.
+-
+-* A recipe using one or more configuration management tools (e.g. Terraform, Ansible, Chef, Puppet, CloudFormation, Vagrant, Packer, etc.) that deploys the stack on a host running a modern Linux distribution _or_ on the AWS cloud.
+-
+-**Important:** please **edit this README file** with step-by-step instructions on _how_ to deploy using your solution. Feel free to also include a short paragraph and/or a diagram explaining your solution.
+-
+-## Expectations
+-
+-When assessing this exercise, we will take the following points into consideration:
+-
+-* Whether the solution works or not
+-* How _easy_ it is to deploy the solution
+-* How _resilient_ it is (e.g. if the database takes a few more seconds to start than usual, does the system stop working and never recovers?)
+-
+-Suppose that a _junior_ developer (who has access to most common Linux distributions and an AWS account) will try to run your solution. Would they be able to install all requirements and run it easily? Would they be able to verify that it works? Should any problems arise (e.g. a package is missing), would they be able to identify and fix it?
+-
+-We don't expect a production-grade solution, but we expect you to show that you'd be able to deploy a production-grade distributed system given enough tools and time.
+-
+-## Submissions
+-
+-You should send us a [git patch](https://git-scm.com/docs/git-format-patch) file with your solution. To do so follow these steps:
+-
+-1.  Clone (do NOT fork) this repository to your machine:
+-
+-        $ git clone https://github.com/quintoandar/hello-devops.git
+-
+-2.  Implement your solution and comit your changes locally:
+-
+-        $ git commit -am "My solution"
+-
+-3.  Create a patch file for this repository:
+-
+-        $ git format-patch origin/master --stdout > result.patch
+-
+-4.  Email us the `result.patch` file.
+-
+-Please do **not** fork this repository and do **not** publish your solution online!
+-
+-## Contact
+-
+-Feel free to reach out if you have any questions! Also, we expect this problem to take some hours at most, but please do get in touch if you need more time to provide a good solution! It is far better than delivering something that does not work :)
+diff --git a/docker-compose.yml b/docker-compose.yml
+new file mode 100644
+index 0000000..3ccd4bc
+--- /dev/null
++++ b/docker-compose.yml
+@@ -0,0 +1,63 @@
++version: '2.4'
++
++services:
++  database:
++    container_name: "${CONTAINER_NAME_MYSQL}"
++    image: "mysql:5.7.28"
++    healthcheck:
++      test: "exit 0"
++    volumes:
++      - ${CREATE_DB}:/docker-entrypoint-initdb.d/create_database.sql
++      - ${DATA_VOLUME_MYSQL}:/var/lib/mysql
++    environment:
++      - MYSQL_ROOT_PASSWORD
++      - MYSQL_USER
++      - MYSQL_PASSWORD
++      - MYSQL_DATABASE
++    restart: unless-stopped
++    hostname: "${CONTAINER_NAME_MYSQL}"
++
++  rabbitmq:
++    container_name: "${CONTAINER_NAME_RABBIT}"
++    image: rabbitmq:3-management
++    healthcheck:
++      test: "exit 0"
++    ports:
++      - "15672:15672"
++    restart: unless-stopped
++    hostname: "${CONTAINER_NAME_RABBIT}"
++
++  hello-node:
++    container_name: "${CONTAINER_NAME_NODE}"
++    depends_on:
++      database:
++        condition: service_healthy
++      rabbitmq:
++        condition: service_healthy
++    build:
++      dockerfile: Dockerfile
++      context: ./hello-node
++    environment:
++      - RABBITMQ_HOST=${CONTAINER_NAME_RABBIT}
++      - RABBITMQ_PORT
++      - RABBITMQ_QUEUE
++      - MYSQL_HOST=${CONTAINER_NAME_MYSQL}
++      - MYSQL_USER
++      - MYSQL_PASSWORD
++      - MYSQL_DB=${MYSQL_DATABASE}
++
++  hello-python:
++    container_name: "${CONTAINER_NAME_PYTHON}"
++    build:
++      dockerfile: Dockerfile
++      context: ./hello-python
++    ports:
++      - "8000:8000"
++    environment:
++      - RABBITMQ_HOST=${CONTAINER_NAME_RABBIT}
++      - RABBITMQ_PORT
++      - RABBITMQ_QUEUE
++
++volumes:
++  database:
++
+diff --git a/hello-node/.dockerignore b/hello-node/.dockerignore
+new file mode 100644
+index 0000000..d0781c3
+--- /dev/null
++++ b/hello-node/.dockerignore
+@@ -0,0 +1,3 @@
++README.md
++Dockerfile
++
+diff --git a/hello-node/Dockerfile b/hello-node/Dockerfile
+new file mode 100644
+index 0000000..4997d77
+--- /dev/null
++++ b/hello-node/Dockerfile
+@@ -0,0 +1,7 @@
++FROM node:6
++WORKDIR /usr/src/app
++COPY . .
++RUN npm install
++CMD [ "node", "./app.js" ]
++
++
+diff --git a/hello-node/app.js b/hello-node/app.js
+index 0f12b22..a40c198 100644
+--- a/hello-node/app.js
++++ b/hello-node/app.js
+@@ -19,7 +19,7 @@ console.log(
+   RABBITMQ_PORT
+ );
+ 
+-var url = "amqp://" + RABBITMQ_HOST + RABBITMQ_PORT;
++var url = "amqp://" + RABBITMQ_HOST + ":" + RABBITMQ_PORT;
+ amqp.connect(url, function(err, conn) {
+   console.log("Connected to RabbitMQ at %s", url);
+ 
+@@ -34,7 +34,7 @@ amqp.connect(url, function(err, conn) {
+         console.log("Received message: %s", msg);
+ 
+         db.query(
+-          "INSERT INTO table SET ?",
++          "INSERT INTO Messages SET ?",
+           { message: msg.content.toString() },
+           function(err, result) {
+             if (err) throw err;
+diff --git a/hello-python/.dockerignore b/hello-python/.dockerignore
+new file mode 100644
+index 0000000..d0781c3
+--- /dev/null
++++ b/hello-python/.dockerignore
+@@ -0,0 +1,3 @@
++README.md
++Dockerfile
++
+diff --git a/hello-python/Dockerfile b/hello-python/Dockerfile
+new file mode 100644
+index 0000000..1dbaa14
+--- /dev/null
++++ b/hello-python/Dockerfile
+@@ -0,0 +1,8 @@
++FROM python:2.7.17
++WORKDIR /usr/src/app
++COPY requirements.txt ./
++RUN pip install --no-cache-dir -r requirements.txt
++COPY . .
++CMD [ "python", "./app.py" ]
++
++
+diff --git a/hello-python/app.py b/hello-python/app.py
+index 8ffa61b..e584fbc 100644
+--- a/hello-python/app.py
++++ b/hello-python/app.py
+@@ -20,7 +20,7 @@ html = """
+ @app.route('/', methods=['GET', 'POST'])
+ def index():
+     if request.method == 'POST':
+-        app.logger.info(request.form.get("flavour"))
++        enqueue(request.form.get("flavour"))
+     return html
+ 
+ 
+diff --git a/terraform-aws b/terraform-aws
+new file mode 160000
+index 0000000..939338a
+--- /dev/null
++++ b/terraform-aws
+@@ -0,0 +1 @@
++Subproject commit 939338a2462f789b0db298f5de7a80986ddeeb3e
+-- 
+2.11.0
+
