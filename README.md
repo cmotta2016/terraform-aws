@@ -8,7 +8,8 @@ git
 
 2. You need to create an IAM service account with programatic access and two policies:  
 ```
-AmazonEC2FullAccess AmazonVPCFullAccess  
+AmazonEC2FullAccess 
+AmazonVPCFullAccess  
 ```
 
 3. After that export the following environment variables:  
