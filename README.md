@@ -27,6 +27,12 @@ git clone https://github.com/cmotta2016/terraform-aws.git
 5. Inside terraform-aws directory run make command:  
 ```
 cd terraform-aws
-make infrastructure
+make create_infrastructure
+```
+
+# Removing provisioned infrastructure
+If you want to remove all of object created on AWS run the following command:  
+```
+make destroy_infrastructure
 ```
 
