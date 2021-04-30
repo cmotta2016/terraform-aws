@@ -1,3 +1,7 @@
+create_plan:
+	# Create Terraform plan
+	terraform plan -out out.plan
+
 create_infrastructure:
 	# Initializing Terraform
 	##terraform init

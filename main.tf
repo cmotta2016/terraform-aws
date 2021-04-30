@@ -19,12 +19,13 @@ resource "aws_key_pair" "hello-key" {
 }
 
 module "network" {
- source = "./modules/network"
+  source = "./modules/network"
 }
 
 module "instance" {
- source = "./modules/instance"
- subnet_name = "${module.network.subnet_name}"
- security_group_id = "${module.network.security_group_id}"
- private_ssh_key = "${var.private_ssh_key}"
+  source            = "./modules/instance"
+  subnet_name       = module.network.subnet_name
+  security_group_id = module.network.security_group_id
+  private_ssh_key   = var.private_ssh_key
+  instance_size     = var.instance_size
 }
