@@ -1,6 +1,6 @@
 create_infrastructure:
 	# Initializing Terraform
-	terraform init
+	##terraform init
 	# Creating SSH key pair locally
 	terraform apply -auto-approve -target null_resource.create_ssh_key 
 	# Creating AWS ssh key

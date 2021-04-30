@@ -27,6 +27,7 @@ git clone https://github.com/cmotta2016/terraform-aws.git
 5. Inside terraform-aws directory run make command:  
 ```
 cd terraform-aws
+terraform init
 make create_infrastructure
 ```
 

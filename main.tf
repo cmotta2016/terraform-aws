@@ -1,3 +1,11 @@
+terraform {
+  backend "s3" {
+    bucket = "tf-state-cmotta"
+    key    = "terraform/state"
+    region = "us-east-1"
+  }
+}
+
 resource "null_resource" "create_ssh_key" {
   provisioner "local-exec" {
     command = "if [ ! -f ${var.private_ssh_key} ]; then ssh-keygen -t rsa -f ${var.private_ssh_key} -C ${var.instance_user} -N ''; fi"
